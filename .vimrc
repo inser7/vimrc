@@ -149,7 +149,7 @@ set tabpagemax=99
 set nobackup
 "set backup
 "set backupdir=$HOME/.vim/backups
-"set directory=$HOME/.vim/temp
+set directory=$HOME/.vim/temp
 
 " Statusline
 set statusline=%<%f%h%m%r%=format=%{&fileformat}\ file=%{&fileencoding}\ enc=%{&encoding}\ %b\ 0x%B\ %l,%c%V\ %P
