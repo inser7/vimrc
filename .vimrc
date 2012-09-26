@@ -114,7 +114,7 @@ set mousehide
 " Регистро-независимый поиск, если не все символы в верхнем регистре
 " Глючит с Omni Completion
 "set ignorecase
-"set smartcase
+set smartcase
 
 " При поиске помечать все найденные строки
 set hlsearch
@@ -155,30 +155,8 @@ set directory=$HOME/.vim/temp
 set statusline=%<%f%h%m%r%=format=%{&fileformat}\ file=%{&fileencoding}\ enc=%{&encoding}\ %b\ 0x%B\ %l,%c%V\ %P
 set laststatus=2
 
-" все файлы, начинающиеся с !#/bin/sh или чего-то подобного 
-" автоматически будут сделаны исполняемыми
-function ModeChange()
-  if getline(1) =~ "^#!"
-    if getline(1) =~ "/bin/"
-      silent !chmod a+x <afile>
-    endif
-  endif
-endfunction
-au BufWritePost * call ModeChange()
-
 " Включаем подсветку синтаксиса
 syntax on
-
-"Слова откуда будем завершать
-set complete=""
-"Из текущего буфера
-set complete+=.
-"Из словаря
-set complete+=k
-"Из других открытых буферов
-set complete+=b
-"из тегов
-set complete+=t
 
 " Включаем filetype плагин.
 filetype plugin on
@@ -186,45 +164,25 @@ if has("autocmd")
     autocmd BufNewFile,Bufread *.php,*.module,*.install set filetype=php
     autocmd BufNewFile,Bufread *.tpl set filetype=smarty
     autocmd BufNewFile,Bufread *.less set filetype=less
+    " | set softtabstop=2 | set shiftwidth=2 | set tabstop=2
 endif
+
+let g:SuperTabCompletionContexts = ['s:ContextText', 's:ContextDiscover']
+let g:SuperTabContextTextOmniPrecedence = ['&omnifunc', '&completefunc']
+let g:SuperTabContextDiscoverDiscovery =
+    \ ["&completefunc:<c-x><c-u>", "&omnifunc:<c-x><c-o>"]
+let g:SuperTabClosePreviewOnPopupClose = 1
 
 " Включаем Omni Completion
 if has("autocmd") && exists("+omnifunc")
-    autocmd Filetype *
-                     \ if &omnifunc == "" |
-                     \ setl omnifunc=syntaxcomplete#Complete |
-                     \ endif
     autocmd FileType smarty set omnifunc=htmlcomplete#CompleteTags
     autocmd FileType less set omnifunc=csscomplete#CompleteCSS
-    " Закрыть окошко подсказок автодополнения
-    autocmd CursorMovedI * if pumvisible() == 0|pclose|endif
-    autocmd InsertLeave * if pumvisible() == 0|pclose|endif
+    autocmd FileType *
+        \ if &omnifunc != '' |
+        \   call SuperTabChain(&omnifunc, "<c-p>") |
+        \   call SuperTabSetDefaultCompletionType("<c-x><c-u>") |
+        \ endif
 endif
-
-" Умное автозавершение по Tab
-let g:stop_autocomplete=0
-function! CleverTab(type)
-    if a:type=='omni'
-        if strpart( getline('.'), 0, col('.')-1 ) =~ '^\s*$'
-            let g:stop_autocomplete=1
-            return "\<TAB>"
-        elseif !pumvisible() && !&omnifunc
-            return "\<C-X>\<C-O>\<C-P>"
-        endif
-    elseif a:type=='keyword' && !pumvisible() && !g:stop_autocomplete
-        return "\<C-X>\<C-N>\<C-P>"
-    elseif a:type=='next'
-        if g:stop_autocomplete
-            let g:stop_autocomplete=0
-        else
-            return "\<C-N>"
-        endif
-    endif
-    return ''
-endfunction
-inoremap <silent><tab> <c-r>=CleverTab('omni')<cr><c-r>=CleverTab('keyword')<cr><c-r>=CleverTab('next')<cr>
-
-
 
 "Устанавливаем клавиатурные сокращения
 
@@ -313,3 +271,14 @@ menu SetEnc.koi8-r    :set fenc=koi8-r<CR>
 menu SetEnc.cp866     :set fenc=ibm866<CR> 
 menu SetEnc.utf-8     :set fenc=utf-8<CR> 
 map  <S-F8> :emenu SetEnc.<TAB>
+
+" все файлы, начинающиеся с !#/bin/sh или чего-то подобного 
+" автоматически будут сделаны исполняемыми
+function ModeChange()
+  if getline(1) =~ "^#!"
+    if getline(1) =~ "/bin/"
+      silent !chmod a+x <afile>
+    endif
+  endif
+endfunction
+au BufWritePost * call ModeChange()
